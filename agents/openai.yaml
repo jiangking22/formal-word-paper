@@ -1,0 +1,4 @@
+interface:
+  display_name: "Formal Word Paper"
+  short_description: "Create and QA formal Chinese Word papers."
+  default_prompt: "Use $formal-word-paper to create a standards-compliant Word paper and run DOCX style QA before delivery."
