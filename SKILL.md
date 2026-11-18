@@ -1,114 +1,36 @@
 ---
 name: formal-word-paper
-description: Create, edit, and QA formal Chinese Word papers and reports in DOCX format. Use when generating academic papers, formal reports, theses, coursework papers, or any Word article where formatting must avoid AI-looking artifacts such as random bold text, Traditional Chinese characters, blue/theme-colored headings, polluted direct formatting, inconsistent fonts, broken figure/table captions, non-SI units, or non-GB/T references.
+description: Create, edit, and review formal Chinese Word papers and reports, including course reports, journal manuscripts, and theses. Apply the target template, format figures and tables, check GB/T 7714 references, and verify the resulting DOCX.
 ---
 
 # Formal Word Paper
 
-Use this skill for formal Chinese `.docx` papers and reports that must look like a human-prepared Word document.
+Use this skill to create, edit, or review the formatting of a formal Chinese `.docx`.
 
-## Required Companion Skill
+## Select the Format
 
-For any DOCX creation or edit, also use the built-in `documents` skill when available. Follow its render-and-verify workflow before delivery.
+- Identify the document type and read the user's assignment instructions, institution or journal requirements, and supplied template. Apply the requirements for that submission. Preserve template styles when filling a supplied DOCX.
+- Read [the format reference](references/format_spec.md) before drafting or auditing. It distinguishes general conventions from fallback Word settings and gives separate checks for course reports, journal manuscripts, and theses.
+- Use GB/T 7714-2025 for references by default. Use the edition and citation system specified for the submission when provided. Check reference entries and their citations using the format reference.
+- Use the `documents` companion skill when available for DOCX creation or editing. For a read-only review, compare the provided material with the applicable requirements and report the findings.
 
-## Core Rule
+## Build the Document
 
-Do not create a Word paper by ad-hoc run formatting. Build or apply a stable Word style system first, then insert content into named styles.
+Define or reuse named paragraph styles for body text, heading levels, table and figure captions, table text, and references. For a new document, set these styles before inserting the content. Use an outline level on custom headings when needed for an automatic table of contents.
 
-Preferred order:
+Use consistent formatting through the styles. Keep intentional emphasis and character formatting for technical notation, scientific names, and template-mandated labels. Enter tables as real Word tables and use Word numbering or fields when appropriate.
 
-1. If the user provides a `.docx` template, copy it and replace content without changing template styles.
-2. If no template is provided, create styles explicitly before drafting.
-3. Render the final DOCX to page images and inspect every page.
-4. Run `scripts/docx_style_audit.py` on the final DOCX.
-5. Fix every error, re-render, and re-run the audit before delivery.
+In a new document, prefer custom heading styles and explicit font mappings. If unexpected color, size, weight, or spacing appears, check the effective style and OOXML overrides. Theme fonts, mismatched `w:sz` and `w:szCs`, `w:bCs`, `w:kern`, and `w:spacing` can account for these differences. Preserve properties required by the supplied template.
 
-## Formatting Standard
+## Verify the DOCX
 
-Before drafting, read `references/format_spec.md` and apply it as the document contract.
-
-Non-negotiable defaults:
-
-- Chinese font: SimSun.
-- English font: Times New Roman.
-- Body size: 12 pt.
-- Body line spacing: 1.5.
-- Body text: Simplified Chinese only.
-- Headings: black, left aligned, no theme color, numbered as `1`, `1.1`, `1.1.1`.
-- Tables: three-line table style, numbered `表1`, `表2`; bilingual captions above each table.
-- Figures: clear source image, preferably JPG/TIFF at 300 dpi or better; numbered `图1`, `图2`; bilingual captions below each figure.
-- Units: SI units, such as `mg/kg` and `mL`; avoid Chinese nonstandard unit forms such as `克/升`.
-- Statistical symbols such as `t` and `P` must be italicized.
-- References: GB/T 7714-2015 sequential numeric style.
-
-## Style Discipline
-
-Use styles for:
-
-- Normal body paragraphs.
-- Heading 1, Heading 2, Heading 3.
-- Table captions.
-- Figure captions.
-- References.
-- Table body and table header text.
-
-Avoid direct formatting except for controlled exceptions:
-
-- Italic statistical symbols.
-- Scientific names or required technical terms.
-- Caption labels if the template explicitly requires them.
-
-Do not use:
-
-- Built-in blue Word title or hyperlink styles for headings.
-- Random bold runs in body paragraphs.
-- Direct run-level font, size, color, or bold overrides for normal prose.
-- Manually colored headings.
-- Mixed Simplified and Traditional Chinese.
-- Fake tables made from tabs or spaces.
-- Fake lists made from repeated hyphens when a real ordered list is needed.
-
-## QA Workflow
-
-After generating or editing the DOCX:
-
-1. Render with the `documents` skill renderer:
+Render and inspect all pages after the last edit. Check typography, page breaks, figure and table captions, numbering, and any required cover, contents, and front matter against the chosen format.
 
 ```bash
 python render_docx.py final.docx --output_dir render_qa
-```
-
-2. Inspect every page PNG at normal zoom.
-3. Run the style audit:
-
-```bash
 python scripts/docx_style_audit.py final.docx
 ```
 
-4. Treat audit `ERROR` items as blocking.
-5. Fix the DOCX, then repeat rendering and auditing.
+The audit detects common DOCX style problems and checks detected sequences, including `[n]` reference labels. Review findings against the target template and the rendered document. Correct confirmed errors and explain any template-authorized exceptions or remaining warnings. Verify the actual reference fields, source-language titles, and correspondence between citations and entries separately.
 
-If rendering is unavailable because LibreOffice is missing, still run the style audit and disclose that visual render QA could not be completed.
-
-## Audit Script
-
-Use `scripts/docx_style_audit.py` for deterministic checks. It inspects DOCX XML for:
-
-- Traditional Chinese candidates.
-- Blue, theme-colored, or non-black heading runs/styles.
-- Direct bold/color/font/size overrides in body text.
-- Heading numbering pattern issues.
-- Table and figure caption ordering.
-- Common non-SI Chinese unit expressions.
-- Non-italic statistical `t` and `P` symbols.
-- Sequential GB/T-style reference labels.
-
-The script is a guardrail, not a substitute for visual QA. Passing it does not remove the requirement to render and inspect the pages.
-
-## Delivery Rule
-
-Do not deliver a DOCX until:
-
-- The latest rendered pages look clean.
-- `docx_style_audit.py` has no errors.
-- Any remaining warnings are either fixed or explicitly explained.
+After correcting a finding, re-render and re-run the audit. If rendering is unavailable, run the audit and disclose the missing visual review.
